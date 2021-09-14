@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.liyan.mapper.ProjectMapper">
+	 	
+	 	<resultMap type="com.liyan.entity.Project" id="baseMap">
+	 		<id property="id" column="id"/>
+	 		<result property="projectName" column = "project_name"/>
+	 		<result property="userId" column = "user_id"/>
+	 	</resultMap>
+	 	
+	 	
+ 		<insert id="insertProject">
+ 			insert into project values (#{id},#{projectName},#{userId})
+ 		</insert>
+ 		
+ 		<update id="modifyProject">
+ 			update project set project_name = #{projectName} where id = #{id}
+ 		</update>
+ 		
+ 		<delete id="deleteProject">
+ 			delete from project where id = #{id}
+ 		</delete>
+ 		
+ 		<select id="getProject" resultMap="baseMap">
+ 		   select * from project
+ 		</select>
+ 		
+ 		<select id="getProjectById" resultMap="baseMap">
+ 			select * from project where id = #{id}
+ 		</select>
+ 		
+ 		<select id="getProjectByPage" resultMap="baseMap">
+ 			select * from project
+ 		</select>
+ 
+ </mapper>

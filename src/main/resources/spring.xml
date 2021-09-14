@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans-4.0.xsd  
+                        http://www.springframework.org/schema/tx
+				 		http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+				 		http://www.springframework.org/schema/aop
+                 		http://www.springframework.org/schema/aop/spring-aop.xsd
+                 	 	http://mybatis.org/schema/mybatis-spring
+                 		http://mybatis.org/schema/mybatis-spring.xsd
+                 		http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context-4.0.xsd
+                        http://www.springframework.org/schema/cache
+                        http://www.springframework.org/schema/cache/spring-cache-4.0.xsd">
+	<import resource="classpath:spring-redis.xml" />
+
+	<context:component-scan
+		base-package="com.liyan.service.impl"></context:component-scan>
+
+	<!-- 配置mapper文件扫描包 ,单数据源，不需要指定sqlsessionFactory,多数据源需要指定 -->
+	<mybatis:scan base-package="com.liyan.mapper" />
+
+	<!-- 引入配置文件 -->
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location"
+			value="classpath:datasource.properties" />
+	</bean>
+
+	<!-- 配置数据源，由于c3p0数据源长期 不更新，所以换用dbcp数据源 -->
+	<bean id="dataSource"
+		class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${driver}" />
+		<property name="url" value="${url}" />
+		<property name="username" value="${username}" />
+		<property name="password" value="${password}" />
+		<!-- 初始连接大小 -->
+		<!-- <property name="initialSize" value="${initialSize}"/> -->
+		<!-- 最大连接数量 -->
+		<!-- <property name="maxActive" value="${maxVative}"/> -->
+		<!-- 最大空闲数 -->
+		<!-- <property name="maxIdle" value="${maxIdle}"/> -->
+		<!-- 最小空闲 -->
+		<!-- <property name="minIdle" value="${minIdle}"/> -->
+		<!-- 最大等待时间 -->
+		<!-- <property name="maxWait" value="${maxWait}"/> -->
+	</bean>
+
+	<!-- sqlSessionFactory,一个sqlSessionFactory相当于一个数据库 -->
+	<bean id="sqlSessionFactory"
+		class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- 事务管理 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- aop，使用aop配置事务 -->
+	<tx:advice id="advice"
+		transaction-manager="transactionManager">
+		<!-- 配置事务的传播性，隔离级别，超时，回滚等问题 -->
+		<tx:attributes>
+			<!-- propagation="REQUIRED"代表支持当前事务，如果当前没有事务，就新建一个事务。这是最常见的选择。 -->
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="del*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="*" rollback-for="Exception" />
+		</tx:attributes>
+	</tx:advice>
+	<!-- <aop:config> 配置事务切入点 <aop:pointcut expression="execution(* com.liyan.service..*.*(..))" 
+		id="services"/> <aop:advisor pointcut-ref="services" advice-ref="advice"/> 
+		</aop:config> -->
+	<!-- 开启注解配置切面 -->
+	<aop:aspectj-autoproxy proxy-target-class="true" />
+	
+	<cache:annotation-driven cache-manager="redisCacheManager"/>
+	
+	<bean id="redisCacheManager" class="org.springframework.data.redis.cache.RedisCacheManager">
+		<constructor-arg index="0" ref="redisTemplate"></constructor-arg>
+		<property name="defaultExpiration"  value="600"></property>
+		<property name="cacheNames">
+			<list>
+				<value>redisCacheManager</value>
+			</list>
+		</property>
+	</bean>
+</beans>                        
+                        

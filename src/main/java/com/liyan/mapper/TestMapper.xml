@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.liyan.mapper.TestMapper">
+	<resultMap type="com.liyan.entity.User" id="baseMap">
+			<id property="guid" column="guid"/>
+			<result property="username" column="username"/>
+			<result property="password" column="password"/>
+			<result property="name" column="name"/>
+			<result property="delFlag" column="del_flag"/>
+			<result property="photostr" column="photo"/>
+			<result property="createTime" column="create_time" javaType="java.util.Date"/>
+			<result property="updateTime" column="update_time" javaType="java.util.Date"/>
+			<collection property="projects" ofType="com.liyan.entity.Project">
+				<id property="id" column="id" jdbcType="VARCHAR" javaType="java.lang.String"/>
+				<result property="projectName" column = "project_name" jdbcType="VARCHAR" javaType="java.lang.String"/>
+				<result property="userId" column = "user_id" jdbcType="VARCHAR" javaType="java.lang.String"/>
+				<result property="teacher" column="teacher" jdbcType="VARCHAR" javaType="java.lang.String"/>
+			</collection>
+			<collection property="link" resultMap="linkMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.liyan.entity.ProjectLink" id="linkMap">
+			<id property="id" column = "id_"/>
+			<result property="fileName" column = "FILE_NAME_"/>
+			<result property="glid" column = "GLID_"/>
+			<result property="delFlag" column = "DEL_FLAG_"/>
+			<result property="insertTime" column = "INSERT_TIME_"/>
+	</resultMap>
+	
+	<resultMap type="com.liyan.entity.Project" id="projectMap">
+			<id property="id" column="id"/>
+			<result property="projectName" column="project_name"/>
+			<result property="userId" column="user_id"/>
+			<result property="teacher" column="teacher"/>
+	</resultMap>
+	
+	
+	<select id="getUser" resultMap="baseMap">
+	select * from user where 1=1
+		<if test='username != null'> 
+			and username = #{username}
+		</if>
+		<if test='password != null'> 
+			and password = #{password}
+		</if>
+	
+	</select>
+	
+	
+	<select id="getUserByPage" resultMap="baseMap">
+	select guid,username,name,create_time,cast(photo as char) as photo from user where 1=1
+		<if test="username != null and username != ''">
+			and username = #{username}
+		</if>
+	</select>
+	
+	<select id="getUserContainsProject" resultMap="projectMap">
+		select * from project where user_id = #{guid}
+	</select>
+	
+	<insert id="insertProjects" parameterType="java.util.List">
+		insert into project(id,project_name,teacher,user_id) values 
+		<foreach collection="list" item = "project" index = "index"
+		 separator=",">
+		(#{project.id},#{project.projectName},#{project.teacher},#{project.userId})
+		</foreach>
+	</insert>
+	
+	<insert id="uploadFile" parameterType="java.util.List">
+	insert into project_file_link (id_,file_name_,GLID_,DEL_FLAG_,INSERT_TIME_) values
+	<foreach collection="list" item = "link" index = "index"
+	separator=",">
+	(#{link.id},#{link.fileName},#{link.glid},#{link.delFlag},#{link.insertTime})
+	</foreach>
+	</insert>
+</mapper>
